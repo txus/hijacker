@@ -1,0 +1,50 @@
+#!/usr/bin/env ruby -w
+# hijacker server
+$LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
+
+require 'hijacker'
+
+opts = Trollop::options do
+  version "hijacker 0.0.1 (c) 2010 Josep M. Bach"
+  banner <<-EOS
+  Hijacker server listens for reports by hijackers spying on ruby objects.
+
+  Usage:
+        hijacker [options]
+  where [options] are:
+EOS
+  opt :without_classes, "Don't show classes of objects"
+  opt :without_timestamps, "Don't show timestamps"
+  opt :port, "DRb port to use (default is 8787)", :default => 8787
+end
+
+begin
+  raise unless opts[:port].to_i > 0 && opts[:port].to_i < 9999
+rescue
+  Trollop::die :port, "must be a valid number between 0 and 9999"
+end
+
+DRB_URI="druby://localhost:#{opts[:port]}"
+
+# Start up the DRb service
+DRb.start_service DRB_URI, Hijacker::Logger.new(opts)
+
+ANSI = Hijacker::Logger::ANSI
+# We need the uri of the service to connect a client
+welcome = []
+welcome << ANSI[:BOLD] + "hijacker server"
+welcome << "listening on"
+welcome << ANSI[:BOLD] + DRb.uri + ANSI[:RESET]
+puts welcome.join("#{ANSI[:RESET]} ") + "\n"
+
+# We need the uri of the service to connect a client
+instructions = "Put this code in the configuration of your ruby program #{ANSI[:BOLD]}before any call to Hijacker#{ANSI[:RESET]}:\n\n"
+instructions += "\t" + "Hijacker.config do\n"
+instructions += "\t" + "  uri '#{DRb.uri}'\n"
+instructions += "\t" + "end\n\n"
+puts instructions
+instructions = "Or optionally attach a particular hijacked object to this server adding :uri => '#{DRb.uri}' when calling Hijacker's :spy or :spying method.\n\n"
+puts instructions
+
+# wait for the DRb service to finish before exiting
+DRb.thread.join
