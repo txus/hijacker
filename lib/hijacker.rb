@@ -40,7 +40,7 @@ module Hijacker
           receiver.class_eval <<EOS
             def #{met}(*args, &blk)
               __original_#{met}(*args,&blk).tap do |retval|
-                Hijacker.register :#{met}, args, retval, self.dup, #{uri.inspect}
+                Hijacker.register :#{met}, args, retval, self, #{uri.inspect}
               end
             end
 EOS
@@ -48,13 +48,12 @@ EOS
 
       receiver = (class << object; self; end)
       sing_methods.each do |met|
-          puts "Defining #{met}"
           receiver.send(:alias_method, :"__original_#{met}", :"#{met}")
           receiver.send(:undef_method, :"#{met}")
           receiver.class_eval <<EOS
             def #{met}(*args, &blk)
               __original_#{met}(*args,&blk).tap do |retval|
-                Hijacker.register :#{met}, args, retval, self.dup, #{uri.inspect}
+                Hijacker.register :#{met}, args, retval, self, #{uri.inspect}
               end
             end
 EOS
