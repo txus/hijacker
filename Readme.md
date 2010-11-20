@@ -58,8 +58,7 @@ Run this code and, if you look at the server output, you'll see nothing less
 than...
 
     <a nice timestamp> MyClass (Class) received :new and returned #<MyClass:0x000000874> (MyClass)
-    <a nice timestamp> #<MyClass:0x000000874> (MyClass) received :foo with 3
-    (Fixnum), 4 (Fixnum) and returned 7
+    <a nice timestamp> #<MyClass:0x000000874> (MyClass) received :foo with 3 (Fixnum), 4 (Fixnum) and returned 7
 
 If you want to un-hijack any object, just call #restore:
 
