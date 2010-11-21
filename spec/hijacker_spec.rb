@@ -137,13 +137,13 @@ describe Hijacker do
                       ]
 
       DRbObject.should_receive(:new).with(nil, "druby://localhost:9999").and_return server
-      server.should_receive(:log).with *expected_args
+      server.should_receive(:handle).with *expected_args
 
       Hijacker.register(:bar, [2, "string"], "retval", MyClass) 
     end
     context "when given a particular DRb uri" do
       it "sends the call to that uri" do
-        DRbObject.should_receive(:new).with(nil, "druby://localhost:1212").and_return mock('DRb server', :log => true)
+        DRbObject.should_receive(:new).with(nil, "druby://localhost:1212").and_return mock('DRb server', :handle => true)
         Hijacker.register(:bar, [2, "string"], "retval", MyClass, "druby://localhost:1212") 
       end
     end

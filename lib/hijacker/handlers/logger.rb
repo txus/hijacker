@@ -1,5 +1,5 @@
 module Hijacker
-  class Logger
+  class Logger < Handler
 
     ANSI = {:RESET=>"\e[0m", :BOLD=>"\e[1m", :UNDERLINE=>"\e[4m",
             :LGRAY=>"\e[0;37m", :GRAY=>"\e[1;30m",
@@ -10,18 +10,8 @@ module Hijacker
             :PURPLE=>"\e[35m", :LPURPLE=>"\e[1;35m",
             :CYAN=>"\e[36m", :LCYAN=>"\e[1;36m",
             :WHITE=>"\e[37m"}
-    
-    # Make dRuby send Logger instances as dRuby references,
-    # not copies.
-    include DRb::DRbUndumped
 
-    attr_reader :opts
-
-    def initialize(opts)
-      @opts = opts
-    end
-
-    def log(method, args, retval, object)
+    def handle(method, args, retval, object)
       out = []
       out << ANSI[:BOLD] + ANSI[:UNDERLINE] + "#{Time.now}" unless opts[:without_timestamps]
       out << ANSI[:CYAN] + object[:inspect]

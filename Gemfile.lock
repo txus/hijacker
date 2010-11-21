@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    hijacker (0.0.1)
+    hijacker (0.0.2)
       trollop
 
 GEM

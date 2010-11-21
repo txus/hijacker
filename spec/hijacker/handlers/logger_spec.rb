@@ -9,7 +9,11 @@ module Hijacker
       subject.opts.should == {:my => :option}
     end
 
-    describe "#log" do
+    it "inherits from Handler" do
+      subject.should be_kind_of(Handler)
+    end
+
+    describe "#handle" do
 
       let(:args) do
         [:bar,
@@ -27,7 +31,7 @@ module Hijacker
 
         Time.stub(:now).and_return Time.parse('2010-11-20')
 
-        subject.log(*args)
+        subject.handle(*args)
 
         ["00:00:00 +0100",
          "MyClass",
@@ -54,7 +58,7 @@ module Hijacker
 
           Time.stub(:now).and_return Time.parse('2010-11-20')
 
-          logger.log(*args)
+          logger.handle(*args)
 
           out.string.should_not include("2010-11-20")
         end
@@ -68,7 +72,7 @@ module Hijacker
 
           Time.stub(:now).and_return Time.parse('2010-11-20')
 
-          logger.log(*args)
+          logger.handle(*args)
 
           ["(Class)", "(Fixnum)", "(String)"].each do |str|
             out.string.should_not include(str)

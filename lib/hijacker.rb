@@ -1,7 +1,7 @@
 require 'drb'
 require 'trollop'
 require 'hijacker/config'
-require 'hijacker/logger'
+require 'hijacker/handler'
 
 module Hijacker
 
@@ -89,7 +89,7 @@ EOS
       object = {:inspect => object.inspect, :class => object.class.name}
 
       server = DRbObject.new nil, (uri || self.drb_uri)
-      server.log method, args, retval, object
+      server.handle method, args, retval, object
     end
 
     private
