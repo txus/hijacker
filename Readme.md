@@ -36,7 +36,7 @@ And that's it! Oooor not. You have to spawn your server. In the command line:
 
     hijacker <handler>
 
-Where <handler> must be a registered handler (for now there is only 'logger').
+Where \<handler\> must be a registered handler (for now there is only 'logger').
 So you type:
 
     hijacker logger
