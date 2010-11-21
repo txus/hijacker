@@ -13,6 +13,11 @@ module Hijacker
       subject.should be_kind_of(Handler)
     end
 
+    it "implements the cli_options class method" do
+      Hijacker::Logger.should respond_to(:cli_options)
+      Hijacker::Logger.cli_options.should be_kind_of(Proc)
+    end
+
     describe "#handle" do
 
       let(:args) do

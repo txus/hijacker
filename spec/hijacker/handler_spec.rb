@@ -27,6 +27,17 @@ module Hijacker
         }.to raise_error NotImplementedError
       end
     end
+
+    describe "class methods" do
+    
+      describe "#register_handler" do
+        it 'registers a loaded handler' do
+          Hijacker::Handler.register_handler "/path/to/my/handlers/benchmark.rb"
+          Hijacker::Handler.handlers.should include('benchmark')
+        end
+      end
+    
+    end
     
   end
 end

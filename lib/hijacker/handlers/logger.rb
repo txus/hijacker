@@ -1,6 +1,13 @@
 module Hijacker
   class Logger < Handler
 
+    def self.cli_options
+      Proc.new {
+        opt :without_classes, "Don't show classes of objects"
+        opt :without_timestamps, "Don't show timestamps"
+      }
+    end
+
     ANSI = {:RESET=>"\e[0m", :BOLD=>"\e[1m", :UNDERLINE=>"\e[4m",
             :LGRAY=>"\e[0;37m", :GRAY=>"\e[1;30m",
             :RED=>"\e[31m",

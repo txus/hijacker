@@ -3,21 +3,32 @@
 $LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
 
 require 'hijacker'
+require 'hijacker/version'
 
+SUB_COMMANDS = Hijacker::Handler.handlers
 opts = Trollop::options do
-  version "hijacker 0.0.1 (c) 2010 Josep M. Bach"
+  version "hijacker #{Hijacker::VERSION} (c) 2010 Josep M. Bach"
   banner <<-EOS
-  Hijacker server listens for reports by hijackers spying on ruby objects.
+  Hijacker server listens for reports by hijackers spying on ruby objects,
+  and passes them to a given handler to process those reports.
+
+  Specific handlers may accept specific options. To learn about which options
+  does a particular handler accept, try:
+
+        hijacker <handler> --help
+
+  The available handlers are:
+    #{SUB_COMMANDS.join(', ')}
 
   Usage:
-        hijacker [options]
+        hijacker <handler> [options]
   where [options] are:
 EOS
-  opt :without_classes, "Don't show classes of objects"
-  opt :without_timestamps, "Don't show timestamps"
   opt :port, "DRb port to use (default is 8787)", :default => 8787
+  stop_on SUB_COMMANDS
 end
 
+# Port resolution
 begin
   raise unless opts[:port].to_i > 0 && opts[:port].to_i < 9999
 rescue
@@ -26,15 +37,23 @@ end
 
 DRB_URI="druby://localhost:#{opts[:port]}"
 
+# Handler resolution
+handler = ARGV.shift # get the handler
+Trollop::die "You need to specify a handler, which must be one of the following: #{SUB_COMMANDS.join(', ')}\n\nMaybe you just feel a bit lost.." unless SUB_COMMANDS.include?(handler)
+
+handler_class = eval("Hijacker::#{handler.capitalize}")
+Trollop::options(&handler_class.cli_options)
+
 # Start up the DRb service
-DRb.start_service DRB_URI, Hijacker::Logger.new(opts)
+DRb.start_service DRB_URI, handler_class.new(opts)
 
 ANSI = Hijacker::Logger::ANSI
 # We need the uri of the service to connect a client
 welcome = []
 welcome << ANSI[:BOLD] + "hijacker server"
 welcome << "listening on"
-welcome << ANSI[:BOLD] + DRb.uri + ANSI[:RESET]
+welcome << ANSI[:BOLD] + DRb.uri
+welcome << "\nUsing " + ANSI[:GREEN] + handler.capitalize + ANSI[:RESET] + " handler" + ANSI[:RESET]
 puts welcome.join("#{ANSI[:RESET]} ") + "\n"
 
 # We need the uri of the service to connect a client
