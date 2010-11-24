@@ -7,7 +7,7 @@ module Hijacker
 
   # Methods that won't be hijacked in any case
   REJECTED_METHODS = (Object.instance_methods | Module.methods | %w{< <= > >= __original_[\w\d]+ [^\w\d]+})
-  FORBIDDEN_CLASSES = [Array, Hash, String, Fixnum, Float, Numeric, Symbol, Proc, Class, Object, BasicObject, Module]
+  FORBIDDEN_CLASSES = [Array, Hash, String, Fixnum, Float, Numeric, Symbol, Proc, Class, Object, Module]
 
   class << self
 
