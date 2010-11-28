@@ -29,9 +29,9 @@ module Hijacker
       #   args      [{:inspect => '3', :class => 'Fixnum'},
       #              {:inspect => '"string"', :class => 'String'}]
       #
-      #   retval    [{:inspect => ':bar', :class => 'Symbol'}]
+      #   retval    {:inspect => ':bar', :class => 'Symbol'}
       #
-      #   object    [{:inspect => '#<MyClass:0x003457>', :class => 'MyClass'}]
+      #   object    {:inspect => '#<MyClass:0x003457>', :class => 'MyClass'}
       #
       raise NotImplementedError.new("You are supposed to subclass Handler")
     end
@@ -52,7 +52,14 @@ module Hijacker
   end
 end
 
-# Automatically load all handlers
-Dir[File.dirname(File.join(File.dirname(__FILE__), 'handlers', '**', '*.rb'))].entries.each do |handler|
+# Automatically load all handlers in the following paths:
+#
+#     ./.hijacker/**/*.rb
+#     ~/.hijacker/**/*.rb
+#     lib/handlers/**/*.rb
+#
+(Dir[File.dirname(File.join(Dir.pwd, '.hijacker', '**', '*.rb'))] + \
+Dir[File.dirname(File.expand_path(File.join('~', '.hijacker', '**', '*.rb')))] + \
+Dir[File.dirname(File.join(File.dirname(__FILE__), 'handlers', '**', '*.rb'))]).entries.each do |handler|
   require(handler) && Hijacker::Handler.register_handler(handler)
 end
