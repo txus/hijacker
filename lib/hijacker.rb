@@ -1,5 +1,6 @@
 require 'drb'
 require 'trollop'
+require 'hijacker/exceptions'
 require 'hijacker/config'
 require 'hijacker/handler'
 
