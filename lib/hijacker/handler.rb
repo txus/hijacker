@@ -21,7 +21,7 @@ module Hijacker
       @opts = opts
     end
 
-    def handle(method, args, retval, object)
+    def handle(method, args, retval, raised, object)
       # Parameters received
       #
       #   method    :foo
@@ -30,6 +30,11 @@ module Hijacker
       #              {:inspect => '"string"', :class => 'String'}]
       #
       #   retval    {:inspect => ':bar', :class => 'Symbol'}
+      # 
+      #   - In case the method raised something, retval will be nil,
+      #    and the exception info will be available in raised:
+      #
+      #   raised    {:inspect => 'wrong number of arguments (0 for 2)', :class => 'ArgumentError'}
       #
       #   object    {:inspect => '#<MyClass:0x003457>', :class => 'MyClass'}
       #

@@ -14,6 +14,15 @@ class MyClass
   def bar(a,b)
     b
   end
+
+  def foo=(value)
+    @value = value
+  end
+
+  def nasty
+    raise "Buuh"
+  end
+
 end
 
 describe Hijacker do
@@ -45,11 +54,11 @@ describe Hijacker do
           Hijacker.spy(MyClass, :only => :instance_methods)
         end
         it "registers method calls without arguments" do
-          Hijacker.should_receive(:register).with(:foo, [], 7, kind_of(MyClass), nil).ordered
+          Hijacker.should_receive(:register).with(:foo, [], 7, nil, kind_of(MyClass), nil).ordered
           MyClass.new.foo.should == 7
         end
         it "registers method calls with arguments" do
-          Hijacker.should_receive(:register).with(:bar, [2, "string"], "string", kind_of(MyClass), nil).ordered
+          Hijacker.should_receive(:register).with(:bar, [2, "string"], "string", nil, kind_of(MyClass), nil).ordered
           MyClass.new.bar(2, "string").should == "string"
         end
         after(:each) do
@@ -61,11 +70,11 @@ describe Hijacker do
           Hijacker.spy(MyClass)
         end
         it "registers method calls without arguments" do
-          Hijacker.should_receive(:register).with(:foo, [], 7, kind_of(Class), nil).ordered
+          Hijacker.should_receive(:register).with(:foo, [], 7, nil, kind_of(Class), nil).ordered
           MyClass.foo.should == 7
         end
         it "registers method calls with arguments" do
-          Hijacker.should_receive(:register).with(:bar, [2, "string"], "string", kind_of(Class), nil).ordered
+          Hijacker.should_receive(:register).with(:bar, [2, "string"], "string", nil, kind_of(Class), nil).ordered
           MyClass.bar(2, "string").should == "string"
         end
         after(:each) do
@@ -96,18 +105,26 @@ describe Hijacker do
           Hijacker.spy(object)
         end
         it "registers method calls without arguments" do
-          Hijacker.should_receive(:register).with(:foo, [], 7, kind_of(MyClass), nil).ordered
-          Hijacker.should_receive(:register).with(:my_method, [], 8, kind_of(MyClass), nil).ordered
+          Hijacker.should_receive(:register).with(:foo, [], 7, nil, kind_of(MyClass), nil).ordered
+          Hijacker.should_receive(:register).with(:my_method, [], 8, nil, kind_of(MyClass), nil).ordered
 
           object.foo.should == 7
           object.my_method.should == 8
         end
         it "registers method calls with arguments" do
-          Hijacker.should_receive(:register).with(:bar, [2, "string"], "string", kind_of(MyClass), nil).ordered
-          Hijacker.should_receive(:register).with(:my_method_with_args, [2, "string"], "string", kind_of(MyClass), nil).ordered
+          Hijacker.should_receive(:register).with(:bar, [2, "string"], "string", nil, kind_of(MyClass), nil).ordered
+          Hijacker.should_receive(:register).with(:my_method_with_args, [2, "string"], "string", nil, kind_of(MyClass), nil).ordered
 
           object.bar(2, "string").should == "string"
           object.my_method_with_args(2, "string").should == "string"
+        end
+        it "works well with writers" do
+          Hijacker.should_receive(:register).with(:foo=, [2], 2, nil, kind_of(MyClass), nil).ordered
+          object.foo = 2
+        end
+        it "records exceptions" do
+          Hijacker.should_receive(:register).with(:nasty, [], nil, kind_of(RuntimeError), kind_of(MyClass), nil).ordered
+          object.nasty rescue nil
         end
         it "does not affect other instances of the object's class" do
           Hijacker.should_not_receive(:register)
@@ -133,18 +150,19 @@ describe Hijacker do
                         {:inspect => "\"string\"", :class => "String"},
                        ],
                        {:inspect => "\"retval\"", :class => "String"},
+                       nil,
                        {:inspect => "MyClass", :class => "Class"}
                       ]
 
       DRbObject.should_receive(:new).with(nil, "druby://localhost:9999").and_return server
       server.should_receive(:handle).with *expected_args
 
-      Hijacker.register(:bar, [2, "string"], "retval", MyClass) 
+      Hijacker.register(:bar, [2, "string"], "retval", nil, MyClass) 
     end
     context "when given a particular DRb uri" do
       it "sends the call to that uri" do
         DRbObject.should_receive(:new).with(nil, "druby://localhost:1212").and_return mock('DRb server', :handle => true)
-        Hijacker.register(:bar, [2, "string"], "retval", MyClass, "druby://localhost:1212") 
+        Hijacker.register(:bar, [2, "string"], "retval", nil, MyClass, "druby://localhost:1212") 
       end
     end
   end

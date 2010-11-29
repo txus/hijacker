@@ -23,6 +23,7 @@ module Hijacker
           {:inspect => "\"string\"", :class => "String"},
          ],
          {:inspect => "\"retval\"", :class => "String"},
+         nil,
          {:inspect => "MyClass", :class => "Class"}]
       end
 
