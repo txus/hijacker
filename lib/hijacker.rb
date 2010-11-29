@@ -1,6 +1,7 @@
 require 'drb'
 require 'trollop'
 require 'hijacker/exceptions'
+require 'hijacker/method_definer'
 require 'hijacker/config'
 require 'hijacker/handler'
 
@@ -9,6 +10,9 @@ module Hijacker
   # Methods that won't be hijacked in any case
   REJECTED_METHODS = (Object.instance_methods | Module.methods | %w{__original_[\w\d]+})
   FORBIDDEN_CLASSES = [Array, Hash, String, Fixnum, Float, Numeric, Symbol, Proc, Class, Object, Module]
+
+  extend MethodDefiner # declares `define_hijacked`
+  private :define_hijacked
 
   class << self
 
@@ -91,26 +95,6 @@ module Hijacker
         object.methods
       else
         []
-      end
-    end
-
-    def define_hijacked(methods, receiver, uri)
-      methods.each do |met|
-        receiver.send(:alias_method, :"__original_#{met}", :"#{met}")
-        receiver.send(:undef_method, :"#{met}")
-        writer = (met =~ /=$/)
-        receiver.class_eval <<EOS
-          def #{met}(#{writer ? 'arg' : '*args, &blk'})
-            begin
-              __original_#{met}(#{writer ? 'arg' : '*args, &blk'}).tap do |retval|
-                Hijacker.register :#{met}, #{writer ? '[arg]' : 'args' }, retval, nil, self, #{uri.inspect}
-              end
-            rescue=>error
-              Hijacker.register :#{met}, #{writer ? '[arg]' : 'args' }, nil, error, self, #{uri.inspect}
-              raise error
-            end
-          end
-EOS
       end
     end
 
