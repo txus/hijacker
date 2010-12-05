@@ -18,7 +18,7 @@ module Hijacker
             :CYAN=>"\e[36m", :LCYAN=>"\e[1;36m",
             :WHITE=>"\e[37m"}
 
-    def handle(method, args, retval, object)
+    def handle(method, args, retval, raised, object)
       out = []
       out << ANSI[:BOLD] + ANSI[:UNDERLINE] + "#{Time.now}" unless opts[:without_timestamps]
       out << ANSI[:CYAN] + object[:inspect]
@@ -32,10 +32,17 @@ module Hijacker
           ANSI[:RESET]
         end.join(', ')
       end
-      out << "and returned"
-      out << ANSI[:BLUE] + retval[:inspect]
-      out << ANSI[:LBLUE] + "(#{retval[:class]})" unless opts[:without_classes]
-      out << ANSI[:RESET] + "\n"
+      if raised
+        out << "and raised"
+        out << ANSI[:BLUE] + raised[:inspect]
+        out << ANSI[:LBLUE] + "(#{raised[:class]})" unless opts[:without_classes]
+        out << ANSI[:RESET] + "\n"
+      else
+        out << "and returned"
+        out << ANSI[:BLUE] + retval[:inspect]
+        out << ANSI[:LBLUE] + "(#{retval[:class]})" unless opts[:without_classes]
+        out << ANSI[:RESET] + "\n"
+      end
       stdout.print out.join("#{ANSI[:RESET]} ")
     end
 

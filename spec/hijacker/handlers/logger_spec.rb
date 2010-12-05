@@ -27,6 +27,7 @@ module Hijacker
           {:inspect => "\"string\"", :class => "String"},
          ],
          {:inspect => "\"retval\"", :class => "String"},
+         nil,
          {:inspect => "MyClass", :class => "Class"}]
       end
 
@@ -84,6 +85,46 @@ module Hijacker
           end
         end
       end
+      context "when given a raised exception" do
+
+        let(:args) do
+          [:bar,
+           [
+            {:inspect => "2", :class => "Fixnum"},
+            {:inspect => "\"string\"", :class => "String"},
+           ],
+           nil,
+           {:inspect => "wrong number of arguments (0 for 2)", :class => "ArgumentError"},
+           {:inspect => "MyClass", :class => "Class"}]
+        end
+
+        it "prints it instead of the return value" do
+          out = StringIO.new
+          subject.stub(:stdout).and_return out
+
+          Time.stub(:now).and_return Time.parse('2010-11-20')
+
+          subject.handle(*args)
+
+          ["00:00:00 +0100",
+           "MyClass",
+           "(Class)",
+           "received",
+           ":bar",
+           "with",
+           "2",
+           "(Fixnum)",
+           "\"string\"",
+           "(String)",
+           "and raised",
+           "wrong number of arguments (0 for 2)",
+           "(ArgumentError)"].each do |str|
+            out.string.should include(str)
+           end
+        end
+
+      end
+
     end
     
   end

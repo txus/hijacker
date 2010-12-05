@@ -11,8 +11,8 @@ module Hijacker
     def drb_uri
       begin
         @@drb_uri
-      rescue
-        raise "Neither a global nor a local Hijacker server URI is configured. Please refer to the README to find out how to do this."
+      rescue NameError
+        raise UndefinedUriError, "Neither a global nor a local Hijacker server URI is configured. Please refer to the README to find out how to do this."
       end
     end
   end
