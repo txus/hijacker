@@ -58,7 +58,7 @@ puts welcome.join("#{ANSI[:RESET]} ") + "\n"
 
 # We need the uri of the service to connect a client
 instructions = "Put this code in the configuration of your ruby program #{ANSI[:BOLD]}before any call to Hijacker#{ANSI[:RESET]}:\n\n"
-instructions += "\t" + "Hijacker.config do\n"
+instructions += "\t" + "Hijacker.configure do\n"
 instructions += "\t" + "  uri '#{DRb.uri}'\n"
 instructions += "\t" + "end\n\n"
 puts instructions

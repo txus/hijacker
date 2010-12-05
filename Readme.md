@@ -16,7 +16,9 @@ creative! :)
 (See the "Extending hijacker blabla" part below to know how to write your own
 handlers)
 
-Hijacker is tested with Ruby 1.8.7, 1.9.2, JRuby 1.5.3 and Rubinius 1.1.
+Hijacker is tested with Ruby 1.8.7, 1.9.2, and JRuby 1.5.3. Unfortunately there
+are some issues with Rubinius, mostly due to the metaprogramming stuff, which I
+will definitely look into.
 
 ##Install and configure
 
@@ -43,6 +45,15 @@ So you type:
 
 And it will output the URI for this super fancy hijacker logging server.
 *Remember this URI* and pass it to your configuration block!
+
+If you have some custom handler, you should send me a pull request! In case you
+don't want to, Hijacker automatically requires all ruby files inside these
+paths:
+
+    ./.hijacker/**/**.rb
+    ~/.hijacker/**/**.rb
+
+So you put your handlers in there and have fun! :)
 
 Some options you can pass to the server command:
 
@@ -122,13 +133,13 @@ Of course, you can specify a particular server uri for a block, with #spying:
 It is really easy to write your own handlers. Why don't you write one and send
 me a pull request? I mean now. What are you waiting for, why are you still reading?
 
-Ok, maybe a bit of explanation on that. Handlers live here:
+Ok, maybe a bit of explanation on that. Handlers are automatically loaded from
+here:
 
-    lib/hijacker/handlers/your_handler.rb
+    ./.hijacker/**/*.rb
+    ~/.hijacker/**/*.rb
 
-They are autoloaded and automatically registered, so all you have to do is
-write them like this:
-
+They are automatically registered, so all you have to do is write them like this:
 
     module Hijacker
       class MyHandler < Handler # Yes, you have to subclass Hijacker::Handler!
@@ -154,10 +165,14 @@ write them like this:
         #
         #   args      [{:inspect => '3', :class => 'Fixnum'},
         #              {:inspect => '"string"', :class => 'String'}]
+        # 
+        #   retval    {:inspect => ':bar', :class => 'Symbol'}
+        #   (note: retval will be nil if the method raised)
         #
-        #   retval    [{:inspect => ':bar', :class => 'Symbol'}]
+        #   raised    {:inspect => 'oops', :class => 'StandardError'}
+        #   (note: raised will be nil unless the method raised, obviously)
         #
-        #   object    [{:inspect => '#<MyClass:0x003457>', :class => 'MyClass'}]
+        #   object    {:inspect => '#<MyClass:0x003457>', :class => 'MyClass'}
         #
         def handle(method, args, retval, object)
           # Do what you want with these!
