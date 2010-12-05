@@ -13,20 +13,20 @@ describe Hijacker, "configuration" do
   describe "#uri" do
     it 'assigns the DRb uri as a class variable' do
       Hijacker.uri 'druby://localhost:8787'
-      Hijacker.class_variable_get(:@@drb_uri).should == 'druby://localhost:8787'
+      Hijacker.send(:class_variable_get, :@@drb_uri).should == 'druby://localhost:8787'
     end
   end
 
   describe "#drb_uri" do
     context "when the class variable is set" do
       it 'is an accessor to it' do
-        Hijacker.class_variable_set(:@@drb_uri, 'druby://localhost:8787')
+        Hijacker.send(:class_variable_set, :@@drb_uri, 'druby://localhost:8787')
         Hijacker.drb_uri.should == 'druby://localhost:8787'
       end
     end
     context "otherwise" do
       it 'raises an error' do
-        Hijacker.remove_class_variable(:@@drb_uri)
+        Hijacker.send(:remove_class_variable, :@@drb_uri)
         expect {
           Hijacker.drb_uri
         }.to raise_error(Hijacker::UndefinedUriError)

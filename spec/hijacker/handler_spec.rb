@@ -55,7 +55,7 @@ module Hijacker
         it 'is an accessor to the class variable' do
           handlers = [double('handler'),
                       double('another handler')]
-          Handler.class_variable_set(:@@handlers, handlers) 
+          Handler.send(:class_variable_set, :@@handlers, handlers) 
           Handler.handlers.should == handlers 
         end
       end
