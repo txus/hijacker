@@ -1,0 +1,11 @@
+=== Version 0.2.0 / 2010-12-05
+
+* enhancements
+  * report blocks passed to hijacked methods as regular arguments
+  * report raised exceptions in hijacked methods
+  * automatically load custom handler classes in these paths:
+    * ./.hijacker/**/*.rb
+    * ~/.hijacker/**/*.rb
+
+* bug fixes
+  * fixed many issues with 1.8.7
