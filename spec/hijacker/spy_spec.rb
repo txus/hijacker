@@ -27,6 +27,10 @@ end unless defined?(MyClass)
 
 module Hijacker
   describe Spy do
+    let(:object) { MyClass.new }
+    let(:klass) { MyClass }
+    let(:inst_methods) { [:foo, :bar] }
+    let(:sing_methods) { [:foo, :bar] }
 
     describe "#spying" do
       it 'runs a block spying on a particular object' do
@@ -47,99 +51,106 @@ module Hijacker
       end
     end
 
-    describe "#spy - #restore" do
+    describe "#spy" do
 
-      describe "hijacking a Class" do
-        describe "instance methods" do
-          before(:each) do
-            Hijacker.spy(MyClass, :only => :instance_methods)
-          end
-          it "registers method calls without arguments" do
-            Hijacker.should_receive(:register).with(:foo, [], 7, nil, kind_of(MyClass), nil).ordered
-            MyClass.new.foo.should == 7
-          end
-          it "registers method calls with arguments" do
-            Hijacker.should_receive(:register).with(:bar, [2, "string"], "string", nil, kind_of(MyClass), nil).ordered
-            MyClass.new.bar(2, "string").should == "string"
-          end
-          after(:each) do
-            Hijacker.restore(MyClass)
+      context "when given a class" do
+        before(:each) do
+          Hijacker.should_receive(:guess_instance_methods_from).with(klass).and_return(inst_methods)
+          Hijacker.should_receive(:guess_singleton_methods_from).with(klass).and_return(sing_methods)
+        end
+
+        let(:metaclass) { (class << klass; self; end) }
+
+        it 'calls define_hijacked on all methods' do
+          Hijacker.should_receive(:define_hijacked).with(inst_methods, klass, nil).once
+          Hijacker.should_receive(:define_hijacked).with(sing_methods, metaclass, nil).once
+
+          Hijacker.spy(klass)    
+        end
+        context "with :only => :singleton_methods" do
+          it 'calls define_hijacked only on singleton methods' do
+            Hijacker.should_not_receive(:define_hijacked).with(inst_methods, klass, nil)
+            Hijacker.should_receive(:define_hijacked).with(sing_methods, metaclass, nil).once
+
+            Hijacker.spy(klass, :only => :singleton_methods)    
           end
         end
-        describe "class methods" do
-          before(:each) do
-            Hijacker.spy(MyClass)
-          end
-          it "registers method calls without arguments" do
-            Hijacker.should_receive(:register).with(:foo, [], 7, nil, kind_of(Class), nil).ordered
-            MyClass.foo.should == 7
-          end
-          it "registers method calls with arguments" do
-            Hijacker.should_receive(:register).with(:bar, [2, "string"], "string", nil, kind_of(Class), nil).ordered
-            MyClass.bar(2, "string").should == "string"
-          end
-          after(:each) do
-            Hijacker.restore(MyClass)
-          end
-        end
-        describe "forbidden classes (are not hijacked)" do
-          [Array, Hash, String, Fixnum, Float, Numeric, Symbol].each do |forbidden|
-            it "protects #{forbidden}" do
-              expect {
-                Hijacker.spy(forbidden)
-              }.to raise_error
-            end
+        context "with :only => :instance_methods" do
+          it 'calls define_hijacked only on instance methods' do
+            Hijacker.should_receive(:define_hijacked).with(inst_methods, klass, nil)
+            Hijacker.should_not_receive(:define_hijacked).with(sing_methods, metaclass, nil)
+
+            Hijacker.spy(klass, :only => :instance_methods)
           end
         end
       end
-      describe "hijacking an object" do
-        describe "instance methods" do
-          let(:object) { MyClass.new }
+      context "when given an object" do
+        before(:each) do
+          Hijacker.stub(:guess_instance_methods_from).with(object).and_return(inst_methods)
+          Hijacker.stub(:guess_singleton_methods_from).with(object).and_return(sing_methods)
+        end
 
-          before(:each) do
-            def object.my_method
-              8
-            end
-            def object.my_method_with_args(a,b)
-              b
-            end
-            Hijacker.spy(object)
-          end
-          it "registers method calls without arguments" do
-            Hijacker.should_receive(:register).with(:foo, [], 7, nil, kind_of(MyClass), nil).ordered
-            Hijacker.should_receive(:register).with(:my_method, [], 8, nil, kind_of(MyClass), nil).ordered
+        let(:metaclass) { (class << object; self; end) }
+        it 'calls define_hijacked on all methods' do
+          Hijacker.should_receive(:define_hijacked).with(inst_methods, metaclass, nil).once
+          Hijacker.should_receive(:define_hijacked).with(sing_methods, metaclass, nil).once
 
-            object.foo.should == 7
-            object.my_method.should == 8
-          end
-          it "registers method calls with arguments" do
-            Hijacker.should_receive(:register).with(:bar, [2, "string"], "string", nil, kind_of(MyClass), nil).ordered
-            Hijacker.should_receive(:register).with(:my_method_with_args, [2, "string"], "string", nil, kind_of(MyClass), nil).ordered
+          Hijacker.spy(object)    
+        end
+        context "with :only => :singleton_methods" do
+          it 'calls define_hijacked only on singleton methods' do
+            Hijacker.should_receive(:define_hijacked).with(sing_methods, metaclass, nil).once
 
-            object.bar(2, "string").should == "string"
-            object.my_method_with_args(2, "string").should == "string"
+            Hijacker.spy(object, :only => :singleton_methods)
           end
-          it "works well with writers" do
-            Hijacker.should_receive(:register).with(:baz=, [2], 2, nil, kind_of(MyClass), nil).ordered
-            object.baz = 2
-          end
-          it "records exceptions" do
-            Hijacker.should_receive(:register).with(:nasty_method, [], nil, kind_of(StandardError), kind_of(MyClass), nil).ordered
-            expect {
-              object.nasty_method
-            }.to raise_error(StandardError)
-          end
-          it "does not affect other instances of the object's class" do
-            Hijacker.should_not_receive(:register)
-            MyClass.new.foo.should == 7
-          end
-          after(:each) do
-            Hijacker.restore(object)
+        end
+        context "with :only => :instance_methods" do
+          it 'calls define_hijacked only on instance methods' do
+            Hijacker.should_receive(:define_hijacked).with(inst_methods, metaclass, nil).once
+
+            Hijacker.spy(object, :only => :instance_methods)
           end
         end
       end
+      context "when given a forbidden class" do
+        it "raises" do
+          expect {
+            Hijacker.spy(Array)
+          }.to raise_error(StandardError)
+        end
+      end
+      it "rejects methods from REJECTED_METHODS constant" do
+        inst_methods_with_some_rejected = inst_methods | [:instance_eval, :__original_something]
+        sing_methods_with_some_rejected = sing_methods | [:instance_eval, :__original_something]
 
+        Hijacker.should_receive(:guess_instance_methods_from).with(object).and_return(inst_methods_with_some_rejected)
+        Hijacker.should_receive(:guess_singleton_methods_from).with(object).and_return(sing_methods_with_some_rejected)
+
+        Hijacker.should_receive(:define_hijacked).with(inst_methods, kind_of(Class), nil).once
+        Hijacker.should_receive(:define_hijacked).with(sing_methods, kind_of(Class), nil).once
+
+        Hijacker.spy(object)
+      end
     end
+
+    describe "#restore" do
+      it "restores all methods from the object" do
+        inst_methods_with_some_hijacked = inst_methods | [:__original_foo, :__original_bar]
+        sing_methods_with_some_hijacked = sing_methods | [:__original_foo, :__original_bar]
+        receiver = (class << object; self; end)
+
+        Hijacker.should_receive(:guess_instance_methods_from).with(object).and_return(inst_methods_with_some_hijacked)
+        Hijacker.should_receive(:guess_singleton_methods_from).with(object).and_return(sing_methods_with_some_hijacked)
+
+        receiver.should_receive(:undef_method).with(:foo).twice # instance and singleton methods
+        receiver.should_receive(:alias_method).with(:foo, :__original_foo).twice
+        receiver.should_receive(:undef_method).with(:bar).twice
+        receiver.should_receive(:alias_method).with(:bar, :__original_bar).twice
+
+        Hijacker.restore(object)
+      end
+    end
+
 
   end
 end

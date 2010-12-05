@@ -41,15 +41,13 @@ module Hijacker
       end
 
       it 'creates aliased methods' do
-        Hijacker.send(:define_hijacked, [:foo, :baz=], receiver, nil)
+        Hijacker.send(:define_hijacked, [:foo], receiver, nil)
         instance = receiver.new
 
         instance.should_receive(:__original_foo).once
         instance.foo
         instance.should_not_receive(:__original_bar)
         instance.bar(9,10)
-        instance.should_receive(:__original_baz=)
-        instance.baz = 3
       end
 
       describe "registering method calls" do

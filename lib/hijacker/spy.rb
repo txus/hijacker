@@ -17,9 +17,9 @@ module Hijacker
       only = options[:only]
       uri = options[:uri]
       custom_rejection = options[:reject] if options[:reject].is_a?(Regexp)
-       
+      
       inst_methods = guess_instance_methods_from(object).reject{|m| (m =~ rejection)}.reject{|m| m =~ custom_rejection}
-      sing_methods = guess_class_methods_from(object).reject{|m| m =~ rejection}.reject{|m| m =~ custom_rejection}
+      sing_methods = guess_singleton_methods_from(object).reject{|m| m =~ rejection}.reject{|m| m =~ custom_rejection}
 
       receiver = if object.is_a?(Class)
         object
@@ -46,7 +46,7 @@ module Hijacker
       end
 
       receiver = (class << object; self; end)
-      guess_class_methods_from(object).select{|m| m =~ /__original_/}.each do |met|
+      guess_singleton_methods_from(object).select{|m| m =~ /__original_/}.each do |met|
         met = met.to_s.gsub!("__original_", "")
         receiver.send(:undef_method, :"#{met}")
         receiver.send(:alias_method, :"#{met}", :"__original_#{met}")
@@ -63,7 +63,7 @@ module Hijacker
       end
     end
 
-    def guess_class_methods_from(object)
+    def guess_singleton_methods_from(object)
       if object.is_a?(Class)
         object.methods
       else
