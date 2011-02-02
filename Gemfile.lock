@@ -45,4 +45,3 @@ DEPENDENCIES
   hijacker!
   rspec (~> 2.1.0)
   simplecov
-  trollop
